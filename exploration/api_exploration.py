@@ -8,55 +8,44 @@ API_URL = (
 
 
 def fetch_page(offset, limit, max_retries=3):
-
     params = {
-
         "limit": limit,
         "offset": offset,
-        "order_by": "date_heure DESC"
+        "order_by": "date_heure DESC",
     }
 
 
     for tentative in range(1, max_retries + 1):
-
         try:
-            response = requests.get(
-                API_URL,
-                params=params,
-                timeout=30
-            )
-    
+            response = requests.get(API_URL, params=params, timeout=30)
+
             if response.status_code == 200:
                 return response.json()["results"]
-    
+
             elif response.status_code in (429, 500, 502, 503, 504):
-
                 retry_after = None
-
                 if response.status_code == 429:
                     retry_after = response.headers.get("Retry-After")
 
                 if wait_before_retry(tentative, max_retries, retry_after):
                     continue
-
-                else:
+                else: # Else 1 : erreur temporaire, nombre de tentative épuisé
                     response.raise_for_status()
 
-            else:
+            else: # Else 2 : Gère tous les autres status
                 response.raise_for_status()
+                raise RuntimeError(
+                    f"Statut HTTP inattendu : {response.status_code}"
+                )
 
         except (
             requests.exceptions.Timeout,
-            requests.exceptions.ConnectionError
+            requests.exceptions.ConnectionError,
         ):
-           if wait_before_retry(tentative, max_retries):
-               continue
-           else:
-               response.raise_for_status()
-               raise RuntimeError(
-                   f"Status HTTP inattendu : {response.status_code}"
-               )
-
+            if wait_before_retry(tentative, max_retries):
+                continue
+            else: # Else 3 : panne réseau, nombre de tentative épuisé
+                raise
 
 
 def extract_data():
