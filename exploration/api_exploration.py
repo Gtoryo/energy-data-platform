@@ -52,10 +52,12 @@ def fetch_page(offset, limit, max_retries=3):
            if wait_before_retry(tentative, max_retries):
                continue
            else:
-               raise
+               response.raise_for_status()
+               raise RuntimeError(
+                   f"Status HTTP inattendu : {response.status_code}"
+               )
 
 
-    
 
 def extract_data():
 
@@ -92,17 +94,23 @@ def extract_data():
 
 
 def wait_before_retry(tentative, max_retries, retry_after=None):
+    """Attend avant une nouvelle tentative.
+    
+    Renvoie True si une nouvelle tentative est autorisée, False sinon.
+    """
+
+    if tentative >= max_retries:
+        return False
 
     delai_initial = 2
+    delai = delai_initial * 2 ** (tentative - 1)
 
-    if tentative < max_retries:
-
-        if retry_after is None:
+    if retry_after is not None:
+        try:
             delai = float(retry_after)
-        else:
-            delai = delai_initial * 2 ** (tentative - 1)
+        except ValueError:
+            pass
 
-        time.sleep(delai)
-        return True
-                      
-    return False
+
+    time.sleep(delai)
+    return True
