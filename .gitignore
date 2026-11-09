@@ -1,0 +1,23 @@
+# Environnement virtuel
+.venv
+
+# Caches Python
+__pycache__/
+*.py[cod]
+.pytest_cache
+
+# Secrets
+.env
+
+# Les journaux
+*.log
+logs/
+
+# Données extraites localement
+data/
+
+# Editeurs / Systeme
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
