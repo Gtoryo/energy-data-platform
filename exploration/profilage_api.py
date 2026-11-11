@@ -100,4 +100,3 @@ if __name__ == "__main__":
     for dataset, jour in jours_changement_heure:
         titre = f"{dataset} : changement d'heure du {jour}"
         afficher(titre, journee(dataset, jour))
-

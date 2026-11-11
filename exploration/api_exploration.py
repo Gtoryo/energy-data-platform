@@ -76,14 +76,13 @@ def extract_data():
         records.extend(results)
 
         offset += nombre_recupere
-        
-    return records
 
+    return records
 
 
 def wait_before_retry(tentative, max_retries, retry_after=None):
     """Attend avant une nouvelle tentative.
-    
+
     Renvoie True si une nouvelle tentative est autorisée, False sinon.
     """
 
