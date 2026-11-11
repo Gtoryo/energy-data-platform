@@ -21,3 +21,5 @@ data/
 .idea/
 Thumbs.db
 desktop.ini
+
+exploration/*.txt

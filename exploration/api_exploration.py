@@ -8,54 +8,44 @@ API_URL = (
 
 
 def fetch_page(offset, limit, max_retries=3):
-
     params = {
-
         "limit": limit,
         "offset": offset,
-        "order_by": "date_heure DESC"
+        "order_by": "date_heure DESC",
     }
 
-
     for tentative in range(1, max_retries + 1):
-
         try:
-            response = requests.get(
-                API_URL,
-                params=params,
-                timeout=30
-            )
-    
+            response = requests.get(API_URL, params=params, timeout=30)
+
             if response.status_code == 200:
                 return response.json()["results"]
-    
+
             elif response.status_code in (429, 500, 502, 503, 504):
-
                 retry_after = None
-
                 if response.status_code == 429:
                     retry_after = response.headers.get("Retry-After")
 
                 if wait_before_retry(tentative, max_retries, retry_after):
                     continue
-
-                else:
+                else:  # Else 1 : erreur temporaire, nombre de tentatives épuisé
                     response.raise_for_status()
 
-            else:
+            else:  # Else 2 : Gère tous les autres status
                 response.raise_for_status()
+                raise RuntimeError(
+                    f"Statut HTTP inattendu : {response.status_code}"
+                )
 
         except (
             requests.exceptions.Timeout,
-            requests.exceptions.ConnectionError
+            requests.exceptions.ConnectionError,
         ):
-           if wait_before_retry(tentative, max_retries):
-               continue
-           else:
-               raise
+            if wait_before_retry(tentative, max_retries):
+                continue
+            else:  # Else 3 : panne réseau, nombre de tentatives épuisé
+                raise
 
-
-    
 
 def extract_data():
 
@@ -86,23 +76,28 @@ def extract_data():
         records.extend(results)
 
         offset += nombre_recupere
-        
+
     return records
 
 
-
 def wait_before_retry(tentative, max_retries, retry_after=None):
+    """Attend avant une nouvelle tentative.
+
+    Renvoie True si une nouvelle tentative est autorisée, False sinon.
+    """
+
+    if tentative >= max_retries:
+        return False
 
     delai_initial = 2
+    delai = delai_initial * 2 ** (tentative - 1)
 
-    if tentative < max_retries:
-
-        if retry_after is None:
+    if retry_after is not None:
+        try:
             delai = float(retry_after)
-        else:
-            delai = delai_initial * 2 ** (tentative - 1)
+        except ValueError:
+            pass
 
-        time.sleep(delai)
-        return True
-                      
-    return False
+
+    time.sleep(delai)
+    return True

@@ -1,9 +1,24 @@
 # Energy Data Platform -- Cahier des charges
 
-**Version :** 1.0\
-**Date de validation :** 7 novembre 2026\
-**Statut :** Cahier des charges validé\
+**Version :** 1.1\
+**Date de mise à jour :** 11 novembre 2026 (version 1.0 validée le 7 novembre 2026)\
+**Statut :** Cahier des charges validé, mis à jour après l'étude technique de l'API\
 **Périmètre :** Consommation et production d'électricité en France
+
+### Historique des versions
+
+  -----------------------------------------------------------------------
+  Version     Date            Modifications
+  ----------- --------------- -------------------------------------------
+  1.0         7 nov. 2026     Version initiale validée.
+
+  1.1         11 nov. 2026    Intégration des résultats de l'étude
+                              technique de l'API (`docs/api_study.md`) :
+                              sources, granularité, calcul de l'énergie,
+                              unité carbone, changements d'heure, clé
+                              métier, stratégie d'extraction, règles
+                              RG13 à RG15, risques.
+  -----------------------------------------------------------------------
 
 ------------------------------------------------------------------------
 
@@ -55,15 +70,25 @@ et Power BI.
   Fenêtre de référence initiale       Du 7 novembre 2021 au 7 novembre
                                       2026, sous réserve de disponibilité
 
-  Granularité des observations        30 minutes lorsque disponible
+  Granularité des observations        Grille source de 15 minutes ;
+                                      mesures à 30 minutes (données
+                                      définitives et consolidées) ou à
+                                      15 minutes (temps réel) ;
+                                      prévisions à 15 minutes
 
-  Source principale                   RTE -- éCO₂mix, via les ressources
-                                      ouvertes et l'API documentée
+  Source principale                   RTE -- éCO₂mix national, via l'API
+                                      ODRÉ : jeux
+                                      `eco2mix-national-cons-def` et
+                                      `eco2mix-national-tr`
+
+  Stratégie d'extraction              Fenêtres mensuelles via l'endpoint
+                                      d'export (`/exports/json`)
 
   Fréquence d'ingestion récurrente    Quotidienne
 
   Unités                              MW pour la puissance ; MWh pour
-                                      l'énergie calculée
+                                      l'énergie calculée ; g/kWh pour le
+                                      taux de CO₂
 
   Stockage                            PostgreSQL
 
@@ -88,6 +113,12 @@ cible fonctionnelle. Les données réellement disponibles, leur statut
 vérifiés dans la source avant l'extraction. Les années civiles complètes
 pourront être utilisées pour certaines comparaisons, en signalant que
 2026 est une année incomplète à la date de rédaction.
+
+**Vérification (v1.1) :** la disponibilité a été confirmée par l'étude
+technique. Les données sont définitives jusqu'au 31 décembre 2025,
+consolidées du 1er janvier au 31 août 2026, et publiées en temps réel
+au-delà (situation au 11 novembre 2026). Le détail figure dans
+`docs/api_study.md`.
 
 ------------------------------------------------------------------------
 
@@ -167,11 +198,20 @@ La source principale envisagée est le jeu de données éCO₂mix national de
 RTE, accessible par les ressources ouvertes de RTE et la plateforme
 ODRÉ.
 
-La sélection exacte du jeu de données, de l'endpoint et du mode d'accès
-sera confirmée pendant l'étude technique de l'API. Nous vérifierons
-notamment la documentation, les paramètres, la pagination, les limites
-d'appel, le schéma de réponse, les unités, les fuseaux horaires et les
-conditions de réutilisation.
+**Décision (v1.1), issue de l'étude technique (`docs/api_study.md`) :**
+deux jeux de données ODRÉ sont nécessaires pour couvrir la fenêtre de
+cinq ans :
+
+-   `eco2mix-national-cons-def` : données définitives et consolidées
+    (historique) ;
+-   `eco2mix-national-tr` : données temps réel, du 1er septembre 2026
+    jusqu'aux prévisions du lendemain.
+
+Les deux jeux sont contigus. Une même période passe successivement du
+statut temps réel au statut consolidé, puis définitif, et change alors
+de jeu de données. L'accès se fait sans authentification. Les schémas
+des deux jeux ne sont pas identiques : types déclarés différents pour
+trois champs, et quatre champs présents uniquement en temps réel.
 
 ### 5.2 Familles de données visées
 
@@ -201,6 +241,10 @@ conditions de réutilisation.
   Prévisions              Prévisions de           Moyenne
                           consommation            
                           disponibles             
+
+  Stockage                Pompage (STEP) ;        Basse
+                          batteries (temps réel   
+                          uniquement)             
   -----------------------------------------------------------------------
 
 La disponibilité de chaque champ, sa fréquence et son unité devront être
@@ -212,6 +256,7 @@ pas être mélangées sans traitement explicite.
 
 L'exemple ci-dessous est fictif et sert uniquement à illustrer le type
 d'information attendu. Il ne constitue pas le schéma officiel de l'API.
+Le schéma réel est décrit au § 3 de `docs/api_study.md`.
 
 ``` json
 {
@@ -234,11 +279,23 @@ d'information attendu. Il ne constitue pas le schéma officiel de l'API.
 
 -   Le MW mesure une puissance.
 -   Le MWh mesure une quantité d'énergie.
--   Pour une puissance moyenne représentative d'un intervalle de 30
-    minutes, l'énergie correspondante peut être estimée par :
-    `énergie_MWh = puissance_MW × 0,5`.
--   L'unité et la définition exactes de l'indicateur carbone devront
-    être reprises de la documentation officielle.
+-   Pour une puissance moyenne représentative d'un intervalle, l'énergie
+    correspondante est estimée par :
+    `énergie_MWh = puissance_MW × durée_intervalle_h`, soit 0,5 h pour
+    une mesure à 30 minutes (données définitives et consolidées) et
+    0,25 h pour une mesure à 15 minutes (temps réel). Un facteur fixe
+    de 0,5 doublerait l'énergie calculée sur les données temps réel.
+    Le caractère moyen (et non instantané) des mesures reste à
+    confirmer dans la documentation RTE.
+-   L'indicateur carbone publié est `taux_co2`, en g/kWh : estimation
+    des émissions de carbone générées par la production d'électricité
+    en France.
+-   La grille source est de 15 minutes. Les mesures n'y sont remplies
+    qu'une ligne sur deux pour les données définitives et consolidées,
+    alors que les prévisions sont remplies à chaque ligne.
+-   Les échanges commerciaux (`ech_comm_*`) sont des valeurs horaires
+    recopiées sur plusieurs lignes : ils ne doivent pas être sommés
+    sur des lignes infra-horaires.
 -   Les données doivent conserver leur granularité d'origine et leur
     statut.
 
@@ -366,6 +423,24 @@ d'information attendu. Il ne constitue pas le schéma officiel de l'API.
   RG12                                Les données sources brutes doivent
                                       rester traçables afin de pouvoir
                                       expliquer les transformations.
+
+  RG13                                Les mesures sont converties
+                                      explicitement en numérique,
+                                      quel que soit le type déclaré par
+                                      la source. Une valeur non
+                                      convertible (par exemple `"ND"`)
+                                      devient NULL et est tracée.
+
+  RG14                                Une valeur horaire recopiée sur
+                                      plusieurs lignes (échanges
+                                      commerciaux) est ramenée à une
+                                      valeur par heure avant toute
+                                      agrégation.
+
+  RG15                                Une ligne future du jeu temps réel
+                                      ne contient que des prévisions :
+                                      l'absence de mesure n'y constitue
+                                      pas une anomalie de qualité.
   -----------------------------------------------------------------------
 
 ### 8.1 Idempotence et corrections
@@ -379,17 +454,45 @@ Le chargement devra permettre d'insérer les nouvelles observations et de
 mettre à jour les observations corrigées, sans dupliquer les
 enregistrements.
 
+**Précision (v1.1) :** la nature de publication évolue dans le temps
+pour un même instant (temps réel, puis consolidé, puis définitif). La
+clé métier proposée est donc `date_heure` (UTC) + périmètre. La nature
+devient un attribut de l'observation et non un élément de la clé. Quand
+plusieurs versions existent, la priorité va à la donnée définitive, puis
+consolidée, puis temps réel. Dans la couche RAW, l'unicité est assurée
+par le couple
+(jeu source, date locale, heure locale), car `date_heure` n'est pas
+unique dans la source (voir § 8.2). Ces propositions seront validées
+lors de la conception de la couche RAW.
+
 ### 8.2 Gestion des changements d'heure
 
 Le fuseau Europe/Paris comporte des journées de 46 ou 50 intervalles de
 30 minutes lors des changements d'heure, au lieu de 48 en journée
 habituelle.
 
-Le système devra : - conserver un horodatage avec fuseau ou un instant
-UTC non ambigu ; - préserver l'information permettant de restituer
-l'heure locale ; - distinguer les deux occurrences d'une heure locale
-répétée en automne ; - ne pas considérer automatiquement une journée de
-46 ou 50 intervalles comme incomplète.
+**Constat (v1.1) :** la source ne respecte pas ce principe. Elle publie
+toujours 96 lignes de 15 minutes par jour local :
+
+-   **en mars**, elle publie 4 lignes « fantômes » pour l'heure locale
+    02:00--02:45, qui n'existe pas. Leur `date_heure` est identique à
+    celle des lignes 03:00--03:45, ce qui crée 4 doublons d'horodatage
+    UTC par an ;
+-   **en octobre**, la première occurrence de l'heure locale répétée
+    (00:00--00:45 UTC) est absente, soit 4 quarts d'heure manquants par
+    an.
+
+Le système devra :
+
+-   utiliser `date_heure` (instant UTC) comme référence temporelle ;
+-   préserver l'information permettant de restituer l'heure locale ;
+-   supprimer les lignes fantômes, c'est-à-dire celles dont la date et
+    l'heure locales ne correspondent pas à `date_heure` convertie dans
+    le fuseau Europe/Paris ;
+-   documenter l'heure manquante d'octobre comme un trou de la source,
+    sans l'inventer ni l'interpoler ;
+-   ne pas considérer automatiquement une journée de 92 ou 100 quarts
+    d'heure réels comme incomplète.
 
 ------------------------------------------------------------------------
 
@@ -424,8 +527,8 @@ Les indicateurs envisagés pour Power BI sont les suivants :
                                       renouvelables retenues, selon une
                                       définition documentée.
 
-  Intensité carbone moyenne           Moyenne calculée selon la
-                                      définition et l'unité de la source.
+  Intensité carbone moyenne           Moyenne de `taux_co2` (g/kWh) sur
+                                      la période.
 
   Écart prévision/réel                Différence entre prévision et
                                       observation comparable sur le même
@@ -464,7 +567,12 @@ provenance ; - préserver le statut de publication lorsqu'il existe ; -
 permettre la réconciliation de données corrigées.
 
 La stratégie de conservation (colonnes structurées, réponse JSON brute
-ou combinaison des deux) sera décidée après inspection du schéma API.
+ou combinaison des deux) sera décidée lors de la conception de la couche
+RAW. **Recommandation de l'étude technique (v1.1) :** conserver chaque
+ligne telle que reçue (JSON brut), avec des colonnes techniques (jeu
+source, fenêtre extraite, identifiant de lot, date d'ingestion). Les
+types déclarés par l'API n'étant pas fiables, la conversion est reportée
+en staging (RG13).
 
 ### 10.2 Couche STAGING
 
@@ -534,9 +642,12 @@ d'extraction Python, ni PostgreSQL, ni dbt.
 **Chargement initial historique (backfill)**
 
 -   récupérer la fenêtre historique cible ;
--   découper l'extraction en périodes adaptées aux limites de l'API ;
--   charger les données par lots ;
--   contrôler les volumes et la couverture temporelle.
+-   découper l'extraction en fenêtres mensuelles semi-ouvertes
+    `[début, fin[` via l'endpoint d'export, qui n'est pas soumis à la
+    limite de 10 000 résultats de la pagination par offset ;
+-   charger les données par lots (un lot par fenêtre) ;
+-   contrôler les volumes et la couverture temporelle. Ordre de
+    grandeur : environ 61 exports et 175 000 lignes pour cinq ans.
 
 **Ingestion récurrente**
 
@@ -546,9 +657,11 @@ d'extraction Python, ni PostgreSQL, ni dbt.
     consolidations et corrections ;
 -   exécuter les transformations et contrôles après le chargement.
 
-La taille exacte des lots et de la fenêtre de réconciliation sera
-décidée après les tests de l'API et l'observation de ses délais de
-publication.
+**Taille des lots (v1.1) :** un mois. **Fenêtre de réconciliation
+proposée :** relecture quotidienne de l'intégralité du jeu temps réel et
+des douze derniers mois du jeu consolidé/définitif. Cette proposition
+sera confirmée après observation de la fréquence de consolidation de la
+source.
 
 ------------------------------------------------------------------------
 
@@ -560,7 +673,10 @@ Les tests Python couvriront notamment : - la construction des requêtes
 HTTP ; - la gestion des réponses et erreurs API ; - la pagination ; - la
 validation du schéma reçu ; - la conversion et normalisation des données
 ; - la logique de chargement et d'upsert ; - les cas limites (réponse
-vide, timeout, champ manquant, données invalides).
+vide, timeout, champ manquant, données invalides) ; - les journées de
+changement d'heure (lignes fantômes de mars, heure manquante
+d'octobre) ; - la conversion des valeurs non numériques (par exemple
+`"ND"`).
 
 Les appels externes seront simulés lorsque nécessaire afin de tester le
 code sans dépendre de la disponibilité de l'API.
@@ -699,7 +815,17 @@ documentées dans dbt.
                                       volumes.
 
   Changements d'heure                 Gestion explicite des fuseaux et
-                                      tests temporels.
+                                      tests temporels ; suppression des
+                                      lignes fantômes de mars et
+                                      documentation de l'heure manquante
+                                      d'octobre (§ 8.2).
+
+  Types déclarés non fiables ou       Conversion explicite en staging et
+  divergents entre les deux jeux      tests de valeurs non convertibles
+                                      (RG13).
+
+  Double comptage des valeurs         Ramener les échanges commerciaux à
+  horaires recopiées                  une valeur par heure (RG14).
 
   Échec d'un DAG                      Reprise contrôlée et idempotence.
 
@@ -708,7 +834,9 @@ documentées dans dbt.
   -----------------------------------------------------------------------
 
 Les conditions de réutilisation et d'attribution de la source officielle
-devront être respectées et documentées.
+devront être respectées et documentées. Les deux jeux sont publiés sous
+Licence Ouverte v2.0 (Etalab), qui impose de mentionner la source et la
+date de dernière mise à jour (voir § 11 de `docs/api_study.md`).
 
 ------------------------------------------------------------------------
 
@@ -747,9 +875,12 @@ energy-data-platform/
 │   └── dashboards/
 │
 ├── docs/
+│   ├── api_study.md
 │   ├── architecture.md
 │   ├── specifications.md
 │   └── data_dictionary.md
+│
+├── exploration/          (scripts d'étude, hors production)
 │
 ├── docker/
 │
@@ -828,24 +959,19 @@ pendant la réalisation.
 
 ------------------------------------------------------------------------
 
-## 20. Prochaine étape : étude technique de l'API RTE
+## 20. Prochaine étape
 
-Le cahier des charges étant validé, la prochaine étape est l'étude
-technique de la source de données.
+L'étude technique de la source (étape 1) est réalisée. Ses résultats,
+ses décisions et ses questions ouvertes sont consignés dans
+`docs/api_study.md`. Elle a couvert les sept points prévus : jeux de
+données, endpoints et authentification, paramètres et filtres
+temporels, pagination, schéma réel, unités, statuts et fuseaux
+horaires, limites d'utilisation et licence.
 
-Nous allons examiner concrètement :
-
-1.  Le jeu de données RTE exact à utiliser.
-2.  Les endpoints et méthodes d'authentification éventuelles.
-3.  Les paramètres de requête et filtres temporels.
-4.  Le mécanisme de pagination.
-5.  Le schéma réel des réponses.
-6.  Les unités, statuts et fuseaux horaires.
-7.  Les limites d'utilisation et conditions de réutilisation.
-
-Après cette étude, nous écrirons un premier script Python avec Requests
-pour interroger l'API, examiner la réponse et valider notre
-compréhension des données avant de construire l'extracteur définitif.
+La prochaine étape est la conception de la couche RAW (grain, clé
+d'unicité, colonnes techniques), qui permettra de valider les
+propositions P1 à P3 de l'étude, puis le développement de l'extracteur
+définitif.
 
 **Principe de travail :** chaque étape sera expliquée avant son
 implémentation. Le code ne sera pas simplement fourni ; les choix
