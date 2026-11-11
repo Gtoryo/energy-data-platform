@@ -83,7 +83,6 @@ if __name__ == "__main__":
         afficher(f"{dataset} : remplissage", remplissage_par_minute(dataset))
         afficher(f"{dataset} : échantillon", echantillon(dataset))
 
-
     afficher(
         "Export d'un mois (janvier 2025)",
         mesurer_export(
@@ -93,12 +92,12 @@ if __name__ == "__main__":
         ),
     )
 
-
     jours_changement_heure = [
             ("eco2mix-national-cons-def", "2025-03-30"),
             ("eco2mix-national-cons-def", "2025-10-26"),
             ("eco2mix-national-tr", "2026-10-25"),
-        ]
+    ]
     for dataset, jour in jours_changement_heure:
-        afficher(f"{dataset} : changement d'heure du {jour}", journee(dataset, jour))
+        titre = f"{dataset} : changement d'heure du {jour}"
+        afficher(titre, journee(dataset, jour))
 
