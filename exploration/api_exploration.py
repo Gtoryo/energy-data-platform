@@ -14,7 +14,6 @@ def fetch_page(offset, limit, max_retries=3):
         "order_by": "date_heure DESC",
     }
 
-
     for tentative in range(1, max_retries + 1):
         try:
             response = requests.get(API_URL, params=params, timeout=30)
@@ -29,10 +28,10 @@ def fetch_page(offset, limit, max_retries=3):
 
                 if wait_before_retry(tentative, max_retries, retry_after):
                     continue
-                else: # Else 1 : erreur temporaire, nombre de tentative épuisé
+                else:  # Else 1 : erreur temporaire, nombre de tentatives épuisé
                     response.raise_for_status()
 
-            else: # Else 2 : Gère tous les autres status
+            else:  # Else 2 : Gère tous les autres status
                 response.raise_for_status()
                 raise RuntimeError(
                     f"Statut HTTP inattendu : {response.status_code}"
@@ -44,7 +43,7 @@ def fetch_page(offset, limit, max_retries=3):
         ):
             if wait_before_retry(tentative, max_retries):
                 continue
-            else: # Else 3 : panne réseau, nombre de tentative épuisé
+            else:  # Else 3 : panne réseau, nombre de tentatives épuisé
                 raise
 
 
