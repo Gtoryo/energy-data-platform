@@ -1,7 +1,7 @@
 -- =====================================================================
 -- Couche RAW : copie fidèle des données reçues de l'API éCO2mix.
--- Exécution automatiquement par PostgreSQL à l'initialisation du volume.
--- Voir docs/api_study.md (9, proposition P1 à P3)
+-- Exécuté automatiquement par PostgreSQL à l'initialisation du volume.
+-- Voir docs/api_study.md (§ 9, proposition P1 à P3)
 -- =====================================================================
 
 CREATE SCHEMA IF NOT EXISTS raw;
@@ -18,14 +18,14 @@ CREATE TABLE IF NOT EXISTS raw.lots_ingestion (
     nb_lignes_recues integer,
     nb_lignes_inserees integer,
     nb_lignes_modifiees integer,
-    message_erreur  text,
+    message_erreur text,
     CONSTRAINT lots_ingestion_statut_check
         CHECK (statut IN ('en_cours', 'succes', 'echec')),
     CONSTRAINT lots_ingestion_fenetre_check
         CHECK (fenetre_debut < fenetre_fin)
 );
 
--- Données : un enregistement de la source, dans sa dernière version reçue.
+-- Données : un enregistrement de la source, dans sa dernière version reçue.
 CREATE TABLE IF NOT EXISTS raw.eco2mix_national (
     jeu text NOT NULL,
     date_locale date NOT NULL,
@@ -33,6 +33,6 @@ CREATE TABLE IF NOT EXISTS raw.eco2mix_national (
     payload jsonb NOT NULL,
     lot_id bigint NOT NULL REFERENCES raw.lots_ingestion (lot_id),
     insere_le timestamptz NOT NULL DEFAULT now(),
-    modifie_le timestamptz,  -- NULL tant que la ligne n'a jamais changée
+    modifie_le timestamptz,  -- NULL tant que la ligne n'a jamais changé
     PRIMARY KEY (jeu, date_locale, heure_locale)
-)
+);
