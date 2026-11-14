@@ -1,0 +1,12 @@
+[tool.pytest.ini_options]
+pythonpath = ["ingestion"]
+testpaths = ["ingestion/tests"]
+
+[tool.ruff]
+line-length = 79
+target-version = "py311"
+src = ["ingestion/src"]
+extend-exclude = ["exploration"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I"]
