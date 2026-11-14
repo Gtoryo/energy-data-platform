@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 
 PARIS = ZoneInfo("Europe/Paris")
 
+
 def monthly_windows(first_month, last_month):
     """Renvoie les fenêtres mensuelles [début, fin[ entre deux mois inclus.
 
