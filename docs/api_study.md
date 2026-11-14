@@ -186,7 +186,7 @@ Fenêtre : 168 864 lignes `cons-def` (07/11/2021 → 31/08/2026) et 7 008 lignes
 **D2. Stratégie d'extraction.** L'extraction se fait par **fenêtres mensuelles** via `/exports/json`. Chaque fenêtre est un intervalle **semi-ouvert** `[début, fin[` (`>=` début et `<` fin), afin qu'aucune ligne ne soit lue deux fois à la frontière entre deux fenêtres.
 *Justification :* 61 appels pour 5 ans au lieu de 1 753 ; aucune limite de 10 000 ; le mois constitue une unité naturelle de chargement, de reprise et de réingestion (§ 11.1 du cahier des charges, RG08).
 
-**Propositions à valider lors de la conception de la couche RAW :**
+**Propositions validées lors de la conception de la couche RAW (14/11/2026, voir `docs/architecture.md`) :**
 
 - **P1. Stockage RAW.** Conserver chaque ligne telle que reçue (JSON brut), accompagnée de colonnes techniques : jeu source, fenêtre extraite, identifiant de lot, date d'ingestion. Clé d'unicité RAW proposée : `(jeu, date, heure)`. Ce couple est unique dans chaque jeu (96 heures locales distinctes par jour), alors que `date_heure` ne l'est pas (Q4).
 - **P2. Clé métier analytique.** `date_heure` (UTC) + `perimetre`, après suppression des lignes fantômes. `nature` est un **attribut**, pas un élément de la clé. Quand plusieurs versions d'un même instant existent, la priorité est : définitive > consolidée > temps réel.
