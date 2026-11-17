@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import pytest
-from dotenv import load_dotenv
 
 import load
 from extract import PARIS
@@ -14,15 +13,6 @@ RECORDS = [
     {"date": "2025-01-15", "heure": "12:15", "consommation": None},
     {"date": "2025-01-15", "heure": "12:30", "consommation": 71000},
 ]
-
-
-@pytest.fixture
-def conn():
-    """Connexion dont tout le travail est annulé à la fin du test."""
-    load_dotenv()
-    with load.connect() as connection:
-        with connection.transaction(force_rollback=True):
-            yield connection
 
 
 def fetch_lot(conn, lot_id):
