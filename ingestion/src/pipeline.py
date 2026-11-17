@@ -7,7 +7,7 @@ import load
 def run_window(conn, dataset, start, end):
     """Extrait une fenêtre de l'API et la charge dans RAW.
 
-    Le lot est fermé  en succès ou en échec. En cas d'échec, l'erreur
+    Le lot est fermé en succès ou en échec. En cas d'échec, l'erreur
     est enregistrée dans le carnet, puis relancée.
     Renvoie le numéro du lot.
     """
