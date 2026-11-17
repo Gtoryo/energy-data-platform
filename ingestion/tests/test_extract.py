@@ -1,7 +1,8 @@
 from datetime import date
 
 import pytest
-from src.extract import monthly_windows
+
+from extract import monthly_windows
 
 
 def test_one_window_per_month():

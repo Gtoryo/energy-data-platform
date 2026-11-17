@@ -2,8 +2,9 @@ from datetime import datetime
 
 import pytest
 import requests
-import src.api_client
-from src.extract import PARIS
+
+import api_client
+from extract import PARIS
 
 DATASET = "eco2mix-national-cons-def"
 START = datetime(2025, 3, 1, tzinfo=PARIS)
@@ -11,7 +12,7 @@ END = datetime(2025, 4, 1, tzinfo=PARIS)
 
 
 class FakeResponse:
-    """Fausse réponse HTTP : seulement ce qu'utilise fetch_windows."""
+    """Fausse réponse HTTP : seulement ce qu'utilise fetch_window."""
 
     def __init__(self, status_code, data=None, headers=None):
         self.status_code = status_code
@@ -41,24 +42,33 @@ def install_fake_api(monkeypatch, responses):
             raise response
         return response
 
-    monkeypatch.setattr(src.api_client.requests, "get", fake_get)
-    monkeypatch.setattr(src.api_client.time, "sleep", sleeps.append)
+    monkeypatch.setattr(api_client.requests, "get", fake_get)
+    monkeypatch.setattr(api_client.time, "sleep", sleeps.append)
     return urls, sleeps
 
 
 def test_export_params_use_half_open_window():
-    params = src.api_client.build_export_params(START, END)
+    params = api_client.build_export_params(START, END)
     assert params["where"] == (
         'date_heure >= "2025-03-01T00:00:00+01:00" '
         'and date_heure < "2025-04-01T00:00:00+02:00"'
     )
 
 
-def test_retries_after_server_error(monkeypatch):
-    response = [FakeResponse(503), FakeResponse(200, [])]
-    urls, sleeps = install_fake_api(monkeypatch, response)
+def test_returns_rows_on_success(monkeypatch):
+    rows = [{"date": "2025-03-01", "heure": "00:00"}]
+    urls, sleeps = install_fake_api(monkeypatch, [FakeResponse(200, rows)])
 
-    assert src.api_client.fetch_window(DATASET, START, END) == []
+    assert api_client.fetch_window(DATASET, START, END) == rows
+    assert urls[0].endswith(f"/{DATASET}/exports/json")
+    assert sleeps == []
+
+
+def test_retries_after_server_error(monkeypatch):
+    responses = [FakeResponse(503), FakeResponse(200, [])]
+    urls, sleeps = install_fake_api(monkeypatch, responses)
+
+    assert api_client.fetch_window(DATASET, START, END) == []
     assert sleeps == [2]
 
 
@@ -69,7 +79,7 @@ def test_follows_retry_after_header(monkeypatch):
     ]
     urls, sleeps = install_fake_api(monkeypatch, responses)
 
-    src.api_client.fetch_window(DATASET, START, END)
+    api_client.fetch_window(DATASET, START, END)
     assert sleeps == [5.0]
 
 
@@ -77,7 +87,7 @@ def test_retries_after_network_error(monkeypatch):
     responses = [requests.exceptions.ConnectionError(), FakeResponse(200, [])]
     urls, sleeps = install_fake_api(monkeypatch, responses)
 
-    assert src.api_client.fetch_window(DATASET, START, END) == []
+    assert api_client.fetch_window(DATASET, START, END) == []
     assert len(urls) == 2
 
 
@@ -86,7 +96,7 @@ def test_gives_up_after_max_retries(monkeypatch):
     urls, sleeps = install_fake_api(monkeypatch, responses)
 
     with pytest.raises(requests.exceptions.HTTPError):
-        src.api_client.fetch_window(DATASET, START, END)
+        api_client.fetch_window(DATASET, START, END)
     assert sleeps == [2, 4]
 
 
@@ -94,5 +104,5 @@ def test_does_not_retry_client_error(monkeypatch):
     urls, sleeps = install_fake_api(monkeypatch, [FakeResponse(404)])
 
     with pytest.raises(requests.exceptions.HTTPError):
-        src.api_client.fetch_window(DATASET, START, END)
+        api_client.fetch_window(DATASET, START, END)
     assert len(urls) == 1
