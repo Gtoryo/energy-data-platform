@@ -17,6 +17,7 @@ def run_window(conn, dataset, start, end):
     Le lot est fermé en succès ou en échec. En cas d'échec, l'erreur
     est enregistrée dans le carnet, puis relancée.
     Renvoie le numéro du lot.
+    Une fenêtre vide est un échec : la source doit renvoyer des lignes.
     """
     lot_id = load.open_lot(conn, dataset, start, end)
     try:
