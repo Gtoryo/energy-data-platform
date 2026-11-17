@@ -1,6 +1,13 @@
 """Extraction puis chargement d'une fenêtre, avec tenue du carnet."""
 
+import argparse
+import time
+from datetime import datetime
+
+from dotenv import load_dotenv
+
 import api_client
+import extract
 import load
 
 
@@ -30,3 +37,36 @@ def run_window(conn, dataset, start, end):
         updated=updated,
     )
     return lot_id
+
+
+def parse_month(text):
+    """Convertit un mois au format AAAA-MM en datetime."""
+    return datetime.strptime(text, "%Y-%m")
+
+
+def main():
+    """Charge dans RAW tous les mois d'une période, un lot par mois."""
+    parser = argparse.ArgumentParser(
+        description="Charge des mois éCO2mix dans la couche RAW."
+    )
+    parser.add_argument("dataset", help="jeu de données de l'API")
+    parser.add_argument("first_month", type=parse_month, help="AAAA-MM")
+    parser.add_argument("last_month", type=parse_month, help="AAAA-MM")
+    args = parser.parse_args()
+
+    load_dotenv()
+    windows = extract.monthly_windows(args.first_month, args.last_month)
+    with load.connect() as conn:
+        for number, (start, end) in enumerate(windows, start=1):
+            began = time.perf_counter()
+            lot_id = run_window(conn, args.dataset, start, end)
+            elapsed = time.perf_counter() - began
+            print(
+                f"[{number}/{len(windows)}] {start:%Y-%m} : "
+                f"lot {lot_id} en {elapsed:.1f} s",
+                flush=True,
+            )
+
+
+if __name__ == "__main__":
+    main()

@@ -72,7 +72,6 @@ def test_empty_window_is_a_failure(conn, monkeypatch):
     assert fetch_lots(conn) == [("echec", None, None, None, error)]
 
 
-
 def test_load_failure_keeps_lot_but_no_rows(conn, monkeypatch):
     broken = RECORDS + [{"date": "2025-01-15", "heure": "pas une heure"}]
 
