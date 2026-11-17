@@ -1,4 +1,4 @@
-"""Client HTTP de l'API Opendatasoft (ODRÉ) pour les jeux éCO2mix"""
+"""Client HTTP de l'API Opendatasoft (ODRÉ) pour les jeux éCO2mix."""
 
 import time
 
@@ -24,7 +24,7 @@ def build_export_params(start, end):
 
 
 def fetch_window(dataset, start, end, max_retries=3):
-    """Télécharge toutes les lignes s'un jeu dans la fenêtre [start, end[."""
+    """Télécharge toutes les lignes d'un jeu dans la fenêtre [start, end[."""
     url = f"{BASE_URL}/{dataset}/exports/json"
     params = build_export_params(start, end)
 
@@ -45,7 +45,7 @@ def fetch_window(dataset, start, end, max_retries=3):
                 continue
 
         response.raise_for_status()
-        raise RuntimeError(f"Statut HTTP inattendu: {response.status_code}")
+        raise RuntimeError(f"Statut HTTP inattendu : {response.status_code}")
 
 
 def wait_before_retry(attempt, max_retries, retry_after=None):

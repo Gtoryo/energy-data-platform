@@ -1,5 +1,5 @@
 [tool.pytest.ini_options]
-pythonpath = ["ingestion"]
+pythonpath = ["ingestion/src"]
 testpaths = ["ingestion/tests"]
 
 [tool.ruff]
