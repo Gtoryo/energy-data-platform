@@ -36,7 +36,7 @@ def connect():
 
 
 def open_lot(conn, dataset, start, end):
-    """Enregistre un lot << en cours >> et renvoie son numéro."""
+    """Enregistre un lot au statut en_cours et renvoie son numéro."""
     row = conn.execute(
         "INSERT INTO raw.lots_ingestion (jeu, fenetre_debut, fenetre_fin) "
         "VALUES (%s, %s, %s) RETURNING lot_id",
