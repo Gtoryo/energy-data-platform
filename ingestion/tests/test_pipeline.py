@@ -59,6 +59,20 @@ def test_api_failure_is_recorded_and_raised(conn, monkeypatch):
     ]
 
 
+def test_empty_window_is_a_failure(conn, monkeypatch):
+    def empty_fetch(dataset, start, end):
+        return []
+
+    monkeypatch.setattr(api_client, "fetch_window", empty_fetch)
+
+    with pytest.raises(RuntimeError):
+        pipeline.run_window(conn, DATASET, START, END)
+
+    error = "RuntimeError: Aucune ligne reçue pour cette fenêtre"
+    assert fetch_lots(conn) == [("echec", None, None, None, error)]
+
+
+
 def test_load_failure_keeps_lot_but_no_rows(conn, monkeypatch):
     broken = RECORDS + [{"date": "2025-01-15", "heure": "pas une heure"}]
 

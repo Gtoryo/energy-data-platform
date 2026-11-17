@@ -14,6 +14,8 @@ def run_window(conn, dataset, start, end):
     lot_id = load.open_lot(conn, dataset, start, end)
     try:
         records = api_client.fetch_window(dataset, start, end)
+        if not records:
+            raise RuntimeError("Aucune ligne reçue pour cette fenêtre")
         inserted, updated = load.upsert_records(conn, dataset, records, lot_id)
     except Exception as error:
         message = f"{type(error).__name__}: {error}"
