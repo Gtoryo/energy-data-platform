@@ -1,4 +1,4 @@
-"""Fixtures partargées par tous les fichiers de tests."""
+"""Fixtures partagées par tous les fichiers de tests."""
 
 import pytest
 from dotenv import load_dotenv
