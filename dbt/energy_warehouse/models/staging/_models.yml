@@ -1,6 +1,6 @@
 models:
   - name: stg_eco2mix
-    description: "Une ligne pae ligne de RAW, avec les champs du JSON convertis en colonnes typées."
+    description: "Une ligne par ligne de RAW, avec les champs du JSON convertis en colonnes typées."
     columns:
       - name: rang_nature
         description: "Priorité de la version : 1 = définitive, 2 = consolidée, 3 = temps réel."
