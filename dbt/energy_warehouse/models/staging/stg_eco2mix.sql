@@ -21,6 +21,14 @@ select
     heure_locale,
     (payload ->> 'date_heure')::timestamptz as date_heure,
     payload ->> 'nature' as nature,
+    case payload ->> 'nature'
+        when 'Données définitives' then 1
+        when 'Données consolidées' then 2
+        when 'Données temps réel' then 3
+    end as rang_nature,
+    (date_locale + heure_locale)
+        <> ((payload ->> 'date_heure')::timestamptz at time zone 'Europe/Paris')
+        as est_fantome,
     payload ->> 'perimetre' as perimetre,
     {% for mesure in mesures %}
     case
