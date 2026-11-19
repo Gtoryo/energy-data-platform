@@ -7,3 +7,8 @@ clean-targets: ["target", "dbt_packages"]
 
 flags:
   send_anonymous_usage_stats: false
+
+models:
+  energy_warehouse:
+    staging:
+      +materialized: view
