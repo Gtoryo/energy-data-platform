@@ -12,3 +12,6 @@ models:
   energy_warehouse:
     staging:
       +materialized: view
+    analytics:
+      +materialized: table
+      +schema: analytics
