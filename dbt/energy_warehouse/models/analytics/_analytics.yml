@@ -11,3 +11,19 @@ models:
         description: "Énergie consommée sur l'intervalle : puissance (MW) × durée (h)."
         data_tests:
           - not_null
+
+  - name: fct_production
+    description: "Une ligne par instant de mesure et par filière, avec l'énergie produite."
+    columns:
+      - name: filiere
+        description: "Filière de production (voir dim_filiere)."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_filiere')
+                field: filiere
+      - name: production_mwh
+        description: "Énergie produite sur l'intervalle : puissance (MW) × durée (h)."
+        data_tests:
+          - not_null
