@@ -15,3 +15,7 @@ models:
     analytics:
       +materialized: table
       +schema: analytics
+
+seeds:
+  energy_warehouse:
+    +schema: analytics

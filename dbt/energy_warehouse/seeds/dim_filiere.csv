@@ -1,0 +1,9 @@
+filiere,libelle,categorie,est_renouvelable,est_bas_carbone
+nucleaire,Nucléaire,Nucléaire,false,true
+eolien,Éolien,Renouvelable,true,true
+solaire,Solaire,Renouvelable,true,true
+hydraulique,Hydraulique,Renouvelable,true,true
+bioenergies,Bioénergies,Renouvelable,true,true
+gaz,Gaz,Fossile,false,false
+charbon,Charbon,Fossile,false,false
+fioul,Fioul,Fossile,false,false

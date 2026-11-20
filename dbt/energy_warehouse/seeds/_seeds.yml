@@ -1,0 +1,9 @@
+seeds:
+  - name:  dim_filiere
+    description: "Une ligne par filière de production, avec sa catégorie."
+    columns:
+      - name: dim_filiere
+        description: "Code de la filière, identique au nom du champ dans la source."
+        data_tests:
+          - unique
+          - not_null
