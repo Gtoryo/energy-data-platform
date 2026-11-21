@@ -23,4 +23,9 @@ data/
 Thumbs.db
 desktop.ini
 
+# Etude de l'API
 exploration/*.txt
+
+# dbt
+target/
+dbt_packages/

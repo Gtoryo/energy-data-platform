@@ -1,0 +1,17 @@
+models:
+  - name: stg_eco2mix
+    description: "Une ligne par ligne de RAW, avec les champs du JSON convertis en colonnes typées."
+    columns:
+      - name: rang_nature
+        description: "Priorité de la version : 1 = définitive, 2 = consolidée, 3 = temps réel."
+        data_tests:
+          - not_null
+
+  - name: stg_eco2mix_instants
+    description: "Une ligne par quart d'heure : lignes fantômes retirées, meilleure version retenue."
+    columns:
+      - name: date_heure
+        description: "Début du quart d'heure, instant exact (UTC)."
+        data_tests:
+          - unique
+          - not_null

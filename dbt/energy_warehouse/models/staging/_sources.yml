@@ -1,0 +1,9 @@
+sources:
+  - name: raw
+    description: "Couche RAW : copie fidèle des données reçues de l'API éCO2mix."
+    schema: raw
+    tables:
+      - name: eco2mix_national
+        description: "Un enregistrement de la source, dans sa dernière version reçue."
+      - name: lots_ingestion
+        description: "Carnet des chargements : un lot par jeu et par fenêtre."

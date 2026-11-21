@@ -1,0 +1,52 @@
+models:
+  - name: fct_consommation
+    description: "Une ligne par instant de mesure de la consommation, avec l'énergie correspondante."
+    columns:
+      - name: date_heure
+        description: "Début de l'intervalle de mesure (UTC)."
+        data_tests:
+          - unique
+          - not_null
+      - name: date
+        description: "Jour de la mesure, heure de Paris (voir dim_date)."
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date
+      - name: consommation_mwh
+        description: "Énergie consommée sur l'intervalle : puissance (MW) × durée (h)."
+        data_tests:
+          - not_null
+
+  - name: fct_production
+    description: "Une ligne par instant de mesure et par filière, avec l'énergie produite."
+    columns:
+      - name: date
+        description: "Jour de la mesure, heure de Paris (voir dim_date)."
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date
+      - name: filiere
+        description: "Filière de production (voir dim_filiere)."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_filiere')
+                field: filiere
+      - name: production_mwh
+        description: "Énergie produite sur l'intervalle : puissance (MW) × durée (h)."
+        data_tests:
+          - not_null
+
+  - name: dim_date
+    description: "Calendrier : une ligne par jour, en années complètes et sans trou."
+    columns:
+      - name: date
+        description: "Jour du calendrier."
+        data_tests:
+          - unique
+          - not_null

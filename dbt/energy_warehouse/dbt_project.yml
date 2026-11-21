@@ -1,0 +1,21 @@
+name: energy_warehouse
+version: "1.0.0"
+profile: energy_warehouse
+require-dbt-version: [">=1.12.0", "<2.0.0"]
+
+clean-targets: ["target", "dbt_packages"]
+
+flags:
+  send_anonymous_usage_stats: false
+
+models:
+  energy_warehouse:
+    staging:
+      +materialized: view
+    analytics:
+      +materialized: table
+      +schema: analytics
+
+seeds:
+  energy_warehouse:
+    +schema: analytics
