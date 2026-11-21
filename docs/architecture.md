@@ -1,6 +1,6 @@
 # Architecture de la plateforme
 
-Version 1.1 du 18/11/2026. Ce document décrit l'architecture technique de la plateforme et justifie les choix de conception. Il complète le cahier des charges (`docs/specifications.md`) et l'étude de l'API (`docs/api_study.md`).
+Version 1.2 du 21/11/2026. Ce document décrit l'architecture technique de la plateforme et justifie les choix de conception. Il complète le cahier des charges (`docs/specifications.md`) et l'étude de l'API (`docs/api_study.md`).
 
 ## Vue d'ensemble
 
@@ -20,7 +20,7 @@ L'entrepôt PostgreSQL comporte un schéma par couche :
 - `staging` : données typées, nettoyées et dédoublonnées ;
 - `analytics` : tables prêtes pour l'analyse et Power BI.
 
-À ce jour, la couche RAW ainsi que l'extraction et le chargement sont réalisés, et l'historique de cinq ans est chargé. Les couches staging et analytics, l'orchestration et la restitution restent à construire.
+À ce jour, la couche RAW, l'extraction et le chargement ainsi que les couches staging et analytics sont réalisés, et l'historique de cinq ans est chargé. L'orchestration et la restitution restent à construire.
 
 ## Couche RAW
 
@@ -110,3 +110,80 @@ Contrôles réalisés après le chargement :
 - **Couverture.** `cons-def` couvre la période du 01/11/2021 au 31/08/2026, et `tr` celle du 01/09/2026 au lendemain du chargement (prévisions J+1). Les deux jeux se raccordent sans trou.
 - **Idempotence.** Le rechargement de mars 2025 a reçu 2 976 lignes, sans en insérer ni en modifier aucune.
 - **Détection des changements.** Lors d'un essai préalable, deux chargements de `tr` espacés d'environ dix minutes ont détecté 24 lignes corrigées par la source. Cela confirme l'intérêt de relire régulièrement les données récentes (proposition P3 de l'étude de l'API).
+
+## Transformation (dbt)
+
+### Rôle
+
+Le projet dbt du dossier `dbt/energy_warehouse` construit les couches staging et analytics à partir de RAW. Les transformations sont écrites en SQL et s'exécutent à l'intérieur de PostgreSQL. Une seule commande construit tous les modèles et exécute tous les tests, dans l'ordre de leurs dépendances :
+
+```bash
+cd dbt/energy_warehouse
+dbt build
+```
+
+dbt utilise les mêmes variables `POSTGRES_*` que le code Python. En local, il lit lui-même le fichier `.env`. Le fichier `profiles.yml` est versionné, car il ne contient que des références à ces variables, jamais leurs valeurs. Les versions sont figées dans `dbt/requirements.txt` : dbt-core 1.12.7 et dbt-postgres 1.11.0. dbt 2 ne prend pas encore PostgreSQL en charge.
+
+### Modèles
+
+| Modèle | Schéma et forme | Une ligne représente |
+|---|---|---|
+| `stg_eco2mix` | `staging`, vue | une ligne de `raw.eco2mix_national`, avec ses mesures typées |
+| `stg_eco2mix_instants` | `staging`, vue | un instant (`date_heure`) dans sa version la plus fiable, hors lignes fantômes |
+| `fct_consommation` | `analytics`, table | un instant où la consommation est mesurée |
+| `fct_production` | `analytics`, table | un instant mesuré et une filière de production |
+| `dim_filiere` | `analytics`, table chargée depuis un fichier CSV (seed) | une filière de production |
+| `dim_date` | `analytics`, table | un jour du calendrier |
+
+Les tables de faits se relient aux dimensions par la colonne `date` (vers `dim_date`) et par la colonne `filiere` (vers `dim_filiere`). C'est un schéma en étoile, la forme attendue par Power BI.
+
+### Décisions
+
+- **Vues en staging, tables en analytics.** Une vue ne stocke rien et reflète toujours le contenu de RAW. Les tables analytics sont calculées à chaque `dbt build`, puis lues rapidement par Power BI. Par défaut, dbt aurait nommé le schéma analytics `staging_analytics`, en ajoutant au schéma du profil celui demandé par le modèle. La macro `macros/generate_schema_name.sql` utilise le nom demandé tel quel, pour retrouver les trois schémas de l'entrepôt.
+- **Conversion tolérante des mesures, stricte des horodatages.** Une mesure n'est convertie en `numeric` que si sa valeur est un nombre valide (`pg_input_is_valid`). Sinon, elle devient NULL (RG13). Sur cinq ans, une seule valeur est concernée (`"ND"`), mais une conversion directe faisait échouer tout le modèle. À l'inverse, `date_heure` est convertie sans tolérance : un horodatage invalide doit arrêter la construction (RG01). La liste des 36 mesures est écrite une seule fois, et une boucle Jinja génère leurs conversions.
+- **Une ligne par instant.** Une ligne est « fantôme » quand sa date et son heure locales ne correspondent pas à sa `date_heure` convertie en heure de Paris (RG09). Les 20 lignes concernées sont marquées dans `stg_eco2mix` (`est_fantome`), qui reste fidèle à RAW, puis exclues de `stg_eco2mix_instants`. Quand un instant existe en plusieurs versions, ce modèle garde la plus fiable : définitive, puis consolidée, puis temps réel. Aujourd'hui, les deux jeux ne se chevauchent pas. Cette règle servira quand `cons-def` couvrira des mois déjà chargés depuis `tr`. La nature retenue reste visible dans les tables de faits (RG07), et `date_heure` y est unique (RG04).
+- **Énergie = puissance × durée.** La source publie des puissances moyennes, en MW. Les données consolidées et définitives sont mesurées toutes les demi-heures, et les données temps réel tous les quarts d'heure. La durée d'un intervalle (`duree_h`) vaut donc 0,5 h ou 0,25 h. Cette règle est définie à un seul endroit, `stg_eco2mix_instants`, et les deux tables de faits la réutilisent. Les instants sans mesure ne sont pas comptés comme des zéros : ils sont écartés des tables de faits (RG05). Ce sont les quarts d'heure intermédiaires de `cons-def` et les instants futurs de `tr`, qui ne portent que des prévisions (RG15). Les unités figurent dans le nom des colonnes : `consommation_mw`, `consommation_mwh`, `taux_co2_g_par_kwh` (RG11).
+- **Deux tables de faits, dont la production au format long.** Le cahier des charges envisageait une table de faits unique (§10.4). Or la consommation (une ligne par instant) et la production (une ligne par instant et par filière) n'ont pas le même grain. Dans une table commune, la consommation serait répétée sur chaque ligne de filière, et une somme la compterait huit fois. `fct_production` contient une ligne par filière plutôt qu'une colonne par filière, comme le recommandait le cahier des charges. Power BI peut ainsi ventiler la production par filière ou par catégorie avec une seule mesure. Les 8 filières principales sont retenues. Leur détail (éolien terrestre et en mer, types de centrales à gaz, etc.) reste disponible en staging.
+- **Filières décrites dans un seed.** `dim_filiere` est appelée `dim_energy_source` dans le cahier des charges. C'est un fichier CSV versionné, car le classement des filières est une convention qui doit être écrite et relue. Il suit celui de RTE, qui compte comme renouvelables l'hydraulique, y compris le turbinage des STEP, et les bioénergies, y compris l'incinération des déchets. Le nucléaire est classé bas carbone, mais non renouvelable.
+- **Calendrier en années complètes.** `dim_date` va du 1er janvier de la première année de données au 31 décembre de la dernière. Ses bornes sont lues dans les données, et elle s'étend d'elle-même quand une nouvelle année est chargée. Elle respecte les quatre règles d'une table de dates Power BI : dates uniques, non vides, sans trou et en années complètes. Les noms des mois et des jours viennent de listes écrites dans le modèle, et non de `to_char`, qui écrit dans la langue du serveur (ici l'anglais). Les saisons sont météorologiques : décembre à février pour l'hiver, et ainsi de suite. La dimension `dim_time` envisagée par le cahier des charges n'a pas été créée : l'heure locale est une colonne des tables de faits.
+
+### Validation
+
+**Tests automatisés : 17 tests dbt**, exécutés par `dbt build` après chaque modèle.
+
+| Test | Modèles | Ce qui est garanti |
+|---|---|---|
+| `unique`, `not_null` sur `date_heure` | `stg_eco2mix_instants`, `fct_consommation` | Un seul enregistrement par instant (RG04). |
+| `not_null` sur `rang_nature` | `stg_eco2mix` | Toutes les natures reçues sont connues. Une nature nouvelle ou mal orthographiée est signalée. |
+| `not_null` sur `consommation_mwh` et `production_mwh` | tables de faits | Chaque ligne de fait porte son énergie. |
+| `unique`, `not_null` sur les clés | `dim_date`, `dim_filiere` | Une jointure vers une dimension ne duplique aucun fait. |
+| `relationships` sur `date` et `filiere`, `not_null` sur `filiere` | tables de faits | Chaque fait trouve sa date et sa filière : aucune ligne orpheline dans Power BI. `relationships` ignore les valeurs vides, d'où le `not_null`. |
+| `assert_jours_de_24_heures_au_plus` | `fct_consommation` | Aucun jour ne cumule plus de 24 h de mesures : la durée des intervalles est juste. |
+| `assert_dim_date_continue` | `dim_date` | Le calendrier est sans trou et couvre des années complètes. |
+
+Chaque test a été volontairement saboté pour vérifier qu'il échoue. Cette pratique a révélé un test de `dim_filiere` qui visait une colonne inexistante portant le nom de la table. PostgreSQL lisait ce nom comme la ligne entière, et le test réussissait sans rien vérifier. Il a été corrigé.
+
+**Volumes au 20/11/2026.**
+
+| Modèle | Lignes |
+|---|---|
+| `stg_eco2mix` | 177 024, autant que RAW |
+| `stg_eco2mix_instants` | 177 004, après exclusion des 20 lignes fantômes |
+| `fct_consommation` | 92 195 |
+| `fct_production` | 737 560, soit 92 195 instants × 8 filières |
+| `dim_filiere` | 8 |
+| `dim_date` | 2 191, de 2021 à 2026 |
+
+Contrôles de vraisemblance :
+
+- **Consommation annuelle.** 450,1 TWh en 2022, 435,5 en 2023, 440,0 en 2024 et 443,8 en 2025.
+- **Production 2024 par catégorie.** Nucléaire 361,7 TWh, renouvelable 156,8 TWh et fossile 19,2 TWh, des valeurs cohérentes avec le bilan électrique 2024 publié par RTE.
+- **Solde.** En 2022, la production (443,3 TWh) est inférieure à la consommation : c'est l'année où une grande partie du parc nucléaire était à l'arrêt, et où la France a importé de l'électricité. Les années suivantes, la production dépasse nettement la consommation, et la France exporte.
+- **Durée mesurée par jour.** 24 h, sauf au passage à l'heure d'été (23 h) et pour les jours incomplets à la source.
+- **Saisonnalité.** En 2024, la puissance moyenne consommée atteint 61 610 MW en hiver, contre 42 647 MW en été : la consommation française dépend fortement de la température, à cause du chauffage électrique. Elle baisse aussi le week-end : 45 746 MW en moyenne le dimanche, contre 52 080 MW le mardi.
+
+### Limites
+
+- **Trace des valeurs non convertibles.** RG13 demande que les valeurs converties en NULL soient tracées. Elles ne sont pas encore comptées ni signalées.
+- **Prévisions futures.** Les tables de faits ne contiennent que des instants mesurés. Les prévisions des instants à venir, publiées dans `tr`, ne sont pas encore exposées en analytics (RG10).
+- **Mesures restées en staging.** Les échanges commerciaux (RG14), le stockage (pompage, batteries) et le détail des filières ne sont pas encore repris en analytics.
