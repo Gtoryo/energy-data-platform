@@ -45,18 +45,51 @@ def parse_month(text):
     return datetime.strptime(text, "%Y-%m")
 
 
-def main():
-    """Charge dans RAW tous les mois d'une période, un lot par mois."""
+def recent_months(dataset, count):
+    """Renvoie le premier et le dernier des `count` derniers mois publiés.
+
+    Le dernier mois est celui de la dernière date publiée, en heure de Paris.
+    """
+    last_date = api_client.fetch_last_date(dataset).astimezone(extract.PARIS)
+    last_month = datetime(last_date.year, last_date.month, 1)
+    return extract.months_before(last_month, count - 1), last_month
+
+
+def build_parser():
+    """Décrit les arguments acceptés par la ligne de commande."""
     parser = argparse.ArgumentParser(
         description="Charge des mois éCO2mix dans la couche RAW."
     )
     parser.add_argument("dataset", help="jeu de données de l'API")
-    parser.add_argument("first_month", type=parse_month, help="AAAA-MM")
-    parser.add_argument("last_month", type=parse_month, help="AAAA-MM")
+    parser.add_argument(
+        "first_month", type=parse_month, nargs="?", help="AAAA-MM"
+    )
+    parser.add_argument(
+        "last_month", type=parse_month, nargs="?", help="AAAA-MM"
+    )
+    parser.add_argument(
+        "--recent",
+        type=int,
+        metavar="N",
+        help="relit les N derniers mois publiés, au lieu d'une période",
+    )
+    return parser
+
+
+def main():
+    """Charge dans RAW tous les mois d'une période, un lot par mois."""
+    parser = build_parser()
     args = parser.parse_args()
 
+    if args.recent and not args.first_month:
+        first_month, last_month = recent_months(args.dataset, args.recent)
+    elif args.first_month and args.last_month and not args.recent:
+        first_month, last_month = args.first_month, args.last_month
+    else:
+        parser.error("donner une période AAAA-MM AAAA-MM ou --recent N")
+
     load_dotenv()
-    windows = extract.monthly_windows(args.first_month, args.last_month)
+    windows = extract.monthly_windows(first_month, last_month)
     with load.connect() as conn:
         for number, (start, end) in enumerate(windows, start=1):
             began = time.perf_counter()

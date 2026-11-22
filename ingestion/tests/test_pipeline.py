@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 import requests
@@ -86,3 +86,36 @@ def test_load_failure_keeps_lot_but_no_rows(conn, monkeypatch):
     error = "ValueError: Invalid isoformat string: 'pas une heure'"
     assert fetch_lots(conn) == [("echec", None, None, None, error)]
     assert count_rows(conn) == 0
+
+
+def fake_last_date(monkeypatch, last):
+    """Remplace la question « dernière date publiée » posée à l'API."""
+    monkeypatch.setattr(api_client, "fetch_last_date", lambda dataset: last)
+
+
+def test_recent_months_end_at_last_published_month(monkeypatch):
+    last_date = datetime(2026, 8, 31, 21, 45, tzinfo=timezone.utc)
+    fake_last_date(monkeypatch, last_date)
+    first, last = pipeline.recent_months(DATASET, 12)
+    assert (first, last) == (datetime(2025, 9, 1), datetime(2026, 8, 1))
+
+
+def test_recent_months_use_paris_time(monkeypatch):
+    # 22:00 UTC le 31 août, c'est déjà minuit le 1er septembre à Paris.
+    last_date = datetime(2026, 8, 31, 22, 0, tzinfo=timezone.utc)
+    fake_last_date(monkeypatch, last_date)
+    first, last = pipeline.recent_months(DATASET, 12)
+    assert (first, last) == (datetime(2025, 10, 1), datetime(2026, 9, 1))
+
+
+def test_cli_reads_dataset_and_period():
+    args = pipeline.build_parser().parse_args([DATASET, "2026-10", "2026-11"])
+    assert args.dataset == DATASET
+    assert args.first_month == datetime(2026, 10, 1)
+    assert args.last_month == datetime(2026, 11, 1)
+
+
+def test_cli_reads_dataset_and_recent():
+    args = pipeline.build_parser().parse_args([DATASET, "--recent", "12"])
+    assert args.dataset == DATASET
+    assert args.recent == 12

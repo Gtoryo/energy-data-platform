@@ -28,3 +28,13 @@ def monthly_windows(first_month, last_month):
         end = datetime(year, month, 1, tzinfo=PARIS)
         windows.append((start, end))
     return windows
+
+
+def months_before(month, count):
+    """Renvoie le 1er du mois situé `count` mois avant `month`.
+
+    Seuls l'année et le mois de `month` comptent. Les mois sont numérotés
+    à la suite (année × 12 + mois), ce qui gère le passage d'année.
+    """
+    index = month.year * 12 + month.month - 1 - count
+    return datetime(index // 12, index % 12 + 1, 1)

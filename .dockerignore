@@ -1,0 +1,4 @@
+# Seuls les fichiers de dépendances entrent dans l'image.
+*
+!requirements.txt
+!dbt/requirements.txt
