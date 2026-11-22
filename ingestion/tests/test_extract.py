@@ -1,8 +1,8 @@
-from datetime import date
+from datetime import date, datetime
 
 import pytest
 
-from extract import monthly_windows
+from extract import monthly_windows, months_before
 
 
 def test_one_window_per_month():
@@ -33,3 +33,11 @@ def test_march_dst_offsets():
 def test_rejects_reversed_months():
     with pytest.raises(ValueError):
         monthly_windows(date(2025, 3, 1), date(2025, 1, 1))
+
+
+def test_months_before_same_year():
+    assert months_before(date(2026, 8, 1), 11) == datetime(2025, 9, 1)
+
+
+def test_months_before_crosses_year():
+    assert months_before(date(2027, 1, 1), 11) == datetime(2026, 2, 1)

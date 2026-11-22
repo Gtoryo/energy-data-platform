@@ -1,6 +1,7 @@
 """Client HTTP de l'API Opendatasoft (ODRÉ) pour les jeux éCO2mix."""
 
 import time
+from datetime import datetime
 
 import requests
 
@@ -27,6 +28,16 @@ def fetch_window(dataset, start, end, max_retries=3):
     """Télécharge toutes les lignes d'un jeu dans la fenêtre [start, end[."""
     url = f"{BASE_URL}/{dataset}/exports/json"
     return get_json(url, build_export_params(start, end), max_retries)
+
+
+def fetch_last_date(dataset, max_retries=3):
+    """Renvoie la dernière date_heure publiée d'un jeu (datetime en UTC)."""
+    url = f"{BASE_URL}/{dataset}/records"
+    params = {"select": "max(date_heure) as fin", "limit": 1}
+    last = get_json(url, params, max_retries)["results"][0]["fin"]
+    if last is None:
+        raise RuntimeError(f"Aucune donnée publiée pour {dataset}")
+    return datetime.fromisoformat(last)
 
 
 def get_json(url, params, max_retries=3):

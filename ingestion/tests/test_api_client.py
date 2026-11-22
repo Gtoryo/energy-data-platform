@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 import requests
@@ -106,3 +106,20 @@ def test_does_not_retry_client_error(monkeypatch):
     with pytest.raises(requests.exceptions.HTTPError):
         api_client.fetch_window(DATASET, START, END)
     assert len(urls) == 1
+
+
+def test_fetch_last_date_reads_the_maximum(monkeypatch):
+    data = {"results": [{"fin": "2026-08-31T21:45:00+00:00"}]}
+    urls, sleeps = install_fake_api(monkeypatch, [FakeResponse(200, data)])
+
+    last = api_client.fetch_last_date(DATASET)
+    assert last == datetime(2026, 8, 31, 21, 45, tzinfo=timezone.utc)
+    assert urls[0].endswith(f"/{DATASET}/records")
+
+
+def test_fetch_last_date_fails_without_data(monkeypatch):
+    data = {"results": [{"fin": None}]}
+    install_fake_api(monkeypatch, [FakeResponse(200, data)])
+
+    with pytest.raises(RuntimeError):
+        api_client.fetch_last_date(DATASET)
