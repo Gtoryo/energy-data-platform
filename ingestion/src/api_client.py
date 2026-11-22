@@ -26,8 +26,14 @@ def build_export_params(start, end):
 def fetch_window(dataset, start, end, max_retries=3):
     """Télécharge toutes les lignes d'un jeu dans la fenêtre [start, end[."""
     url = f"{BASE_URL}/{dataset}/exports/json"
-    params = build_export_params(start, end)
+    return get_json(url, build_export_params(start, end), max_retries)
 
+
+def get_json(url, params, max_retries=3):
+    """Envoie une requête GET et renvoie le JSON reçu.
+
+    Les erreurs temporaires donnent lieu à de nouvelles tentatives.
+    """
     for attempt in range(1, max_retries + 1):
         try:
             response = requests.get(url, params=params, timeout=60)
