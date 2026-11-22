@@ -55,13 +55,14 @@ def recent_months(dataset, count):
     return extract.months_before(last_month, count - 1), last_month
 
 
-def main():
-    """Charge dans RAW tous les mois d'une période, un lot par mois."""
+def build_parser():
+    """Décrit les arguments acceptés par la ligne de commande."""
     parser = argparse.ArgumentParser(
         description="Charge des mois éCO2mix dans la couche RAW."
     )
+    parser.add_argument("dataset", help="jeu de données de l'API")
     parser.add_argument(
-    "first_month", type=parse_month, nargs="?", help="AAAA-MM"
+        "first_month", type=parse_month, nargs="?", help="AAAA-MM"
     )
     parser.add_argument(
         "last_month", type=parse_month, nargs="?", help="AAAA-MM"
@@ -72,6 +73,12 @@ def main():
         metavar="N",
         help="relit les N derniers mois publiés, au lieu d'une période",
     )
+    return parser
+
+
+def main():
+    """Charge dans RAW tous les mois d'une période, un lot par mois."""
+    parser = build_parser()
     args = parser.parse_args()
 
     if args.recent and not args.first_month:
@@ -83,7 +90,6 @@ def main():
 
     load_dotenv()
     windows = extract.monthly_windows(first_month, last_month)
-
     with load.connect() as conn:
         for number, (start, end) in enumerate(windows, start=1):
             began = time.perf_counter()

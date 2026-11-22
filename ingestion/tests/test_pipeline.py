@@ -106,3 +106,16 @@ def test_recent_months_use_paris_time(monkeypatch):
     fake_last_date(monkeypatch, last_date)
     first, last = pipeline.recent_months(DATASET, 12)
     assert (first, last) == (datetime(2025, 10, 1), datetime(2026, 9, 1))
+
+
+def test_cli_reads_dataset_and_period():
+    args = pipeline.build_parser().parse_args([DATASET, "2026-10", "2026-11"])
+    assert args.dataset == DATASET
+    assert args.first_month == datetime(2026, 10, 1)
+    assert args.last_month == datetime(2026, 11, 1)
+
+
+def test_cli_reads_dataset_and_recent():
+    args = pipeline.build_parser().parse_args([DATASET, "--recent", "12"])
+    assert args.dataset == DATASET
+    assert args.recent == 12
