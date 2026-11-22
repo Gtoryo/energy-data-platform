@@ -39,6 +39,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
       - ./database/init:/docker-entrypoint-initdb.d:ro
+    restart: unless-stopped
 
   airflow-db:
     image: postgres:18.7
@@ -53,6 +54,7 @@ services:
       interval: 10s
       retries: 5
       start_period: 5s
+    restart: unless-stopped
 
   airflow-init:
     <<: *airflow-common
@@ -67,6 +69,7 @@ services:
   airflow-apiserver:
     <<: *airflow-common
     command: api-server
+    restart: unless-stopped
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:
@@ -77,6 +80,7 @@ services:
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
+    restart: unless-stopped
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -85,6 +89,7 @@ services:
   airflow-dag-processor:
     <<: *airflow-common
     command: dag-processor
+    restart: unless-stopped
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
