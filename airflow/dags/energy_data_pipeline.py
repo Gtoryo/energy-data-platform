@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 import pendulum
 from airflow.providers.standard.operators.bash import BashOperator
 from airflow.sdk import DAG
+from airflow.timetables.trigger import CronTriggerTimetable
 
 log = logging.getLogger(__name__)
 
@@ -35,8 +36,9 @@ def alerter(context):
 
 with DAG(
     dag_id="energy_data_pipeline",
-    schedule=None,
+    schedule=CronTriggerTimetable("0 6 * * *", timezone="Europe/Paris"),
     start_date=pendulum.datetime(2026, 11, 1, tz="Europe/Paris"),
+    catchup=False,
     default_args={
         "retries": 2,
         "retry_delay": timedelta(minutes=5),
