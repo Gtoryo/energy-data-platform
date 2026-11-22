@@ -55,10 +55,18 @@ with DAG(
         ),
         cwd="/opt/project/ingestion/src",
     )
+    load_raw_cons_def = BashOperator(
+        task_id="load_raw_cons_def",
+        bash_command=(
+            "/opt/venvs/ingestion/bin/python pipeline.py"
+            " eco2mix-national-cons-def --recent 12"
+        ),
+        cwd="/opt/project/ingestion/src",
+    )
     dbt_build = BashOperator(
         task_id="dbt_build",
         bash_command="/opt/venvs/dbt/bin/dbt build",
         cwd="/opt/project/dbt/energy_warehouse",
     )
 
-    load_raw_tr >> dbt_build
+    [load_raw_tr, load_raw_cons_def] >> dbt_build
