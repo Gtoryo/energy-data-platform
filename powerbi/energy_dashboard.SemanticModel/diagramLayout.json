@@ -1,0 +1,74 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 0,
+            "y": 0
+          },
+          "nodeIndex": "dim_date",
+          "nodeLineageTag": "8726c65d-1d9e-4945-b929-caa28a27fea9",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 4
+        },
+        {
+          "location": {
+            "x": 284,
+            "y": 50
+          },
+          "nodeIndex": "dim_filiere",
+          "nodeLineageTag": "83199fd8-c0cd-4834-9156-79d366f99ef4",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 1
+        },
+        {
+          "location": {
+            "x": 568,
+            "y": 0
+          },
+          "nodeIndex": "fct_consommation",
+          "nodeLineageTag": "915af9fb-1fa5-41a5-bdd5-03f2f18adbca",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 852,
+            "y": 14
+          },
+          "nodeIndex": "fct_production",
+          "nodeLineageTag": "8fc3b525-2c5c-4f91-90ae-2e940760d9ff",
+          "size": {
+            "height": 272,
+            "width": 234
+          },
+          "zIndex": 3
+        }
+      ],
+      "name": "Toutes les tables",
+      "zoomValue": 98.206278026905821,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "Toutes les tables",
+  "defaultDiagram": "Toutes les tables"
+}

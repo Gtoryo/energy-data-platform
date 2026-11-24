@@ -1,0 +1,104 @@
+table dim_date
+	lineageTag: 8726c65d-1d9e-4945-b929-caa28a27fea9
+	dataCategory: Time
+
+	column date
+		dataType: dateTime
+		isKey
+		formatString: Long Date
+		lineageTag: a3cffcf8-27ef-4719-a5c0-5eca53fb8b04
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column annee
+		dataType: int64
+		formatString: 0
+		lineageTag: 241d62d9-5836-439f-9a19-0b668706aeda
+		summarizeBy: sum
+		sourceColumn: annee
+
+		annotation SummarizationSetBy = Automatic
+
+	column trimestre
+		dataType: int64
+		formatString: 0
+		lineageTag: 7f99a8ba-d7fb-4991-bc8b-a48c1201bcab
+		summarizeBy: sum
+		sourceColumn: trimestre
+
+		annotation SummarizationSetBy = Automatic
+
+	column mois
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f4a5ca7-4c83-41b7-8c5a-2a77ccfe88f5
+		summarizeBy: sum
+		sourceColumn: mois
+
+		annotation SummarizationSetBy = Automatic
+
+	column nom_mois
+		dataType: string
+		lineageTag: d3ab8f85-0e07-4ded-b277-1bb00417d1d5
+		summarizeBy: none
+		sourceColumn: nom_mois
+		sortByColumn: mois
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column jour_semaine
+		dataType: int64
+		formatString: 0
+		lineageTag: 7d7b9a50-de29-415f-b854-83b1a6c5c717
+		summarizeBy: sum
+		sourceColumn: jour_semaine
+
+		annotation SummarizationSetBy = Automatic
+
+	column nom_jour
+		dataType: string
+		lineageTag: 748af44b-45aa-436a-afd8-2f8c891fdafe
+		summarizeBy: none
+		sourceColumn: nom_jour
+		sortByColumn: jour_semaine
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column est_weekend
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: e91f7dee-9ae0-449b-affc-caf9c66e07f7
+		summarizeBy: none
+		sourceColumn: est_weekend
+
+		annotation SummarizationSetBy = Automatic
+
+	column saison
+		dataType: string
+		lineageTag: 3592db54-e7c3-4902-a8b0-f8121e835a3d
+		summarizeBy: none
+		sourceColumn: saison
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_date = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("127.0.0.1:5433", "energy_warehouse"),
+				    analytics_dim_date = Source{[Schema="analytics",Item="dim_date"]}[Data]
+				in
+				    analytics_dim_date
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

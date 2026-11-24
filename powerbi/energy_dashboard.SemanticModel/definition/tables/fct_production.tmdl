@@ -1,0 +1,99 @@
+table fct_production
+	lineageTag: 8fc3b525-2c5c-4f91-90ae-2e940760d9ff
+
+	column date_heure
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e10c24c6-6753-46d9-862f-dc35268e7927
+		summarizeBy: none
+		sourceColumn: date_heure
+
+		annotation SummarizationSetBy = Automatic
+
+	column date
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: 5e026fcd-5890-4de9-a629-aeeb7a8324e5
+		summarizeBy: none
+		sourceColumn: date
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column heure
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: e7bab422-ba38-4dc6-b873-76cf29c01aa6
+		summarizeBy: none
+		sourceColumn: heure
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column nature
+		dataType: string
+		lineageTag: 47570f20-14af-4d8c-95c4-5ba75615d162
+		summarizeBy: none
+		sourceColumn: nature
+
+		annotation SummarizationSetBy = Automatic
+
+	column duree_h
+		dataType: double
+		lineageTag: 1a77987c-b775-470d-8087-315a66509644
+		summarizeBy: sum
+		sourceColumn: duree_h
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column filiere
+		dataType: string
+		isHidden
+		lineageTag: c70a856c-ea10-4f65-b90f-51b05285b13e
+		summarizeBy: none
+		sourceColumn: filiere
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column production_mw
+		dataType: double
+		lineageTag: d5d2ae0c-aba7-42b6-9aa8-907c5ae48765
+		summarizeBy: sum
+		sourceColumn: production_mw
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column production_mwh
+		dataType: double
+		lineageTag: 26c9ca91-4892-40ca-a564-76109cec297f
+		summarizeBy: sum
+		sourceColumn: production_mwh
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition fct_production = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("127.0.0.1:5433", "energy_warehouse"),
+				    analytics_fct_production = Source{[Schema="analytics",Item="fct_production"]}[Data]
+				in
+				    analytics_fct_production
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

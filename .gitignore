@@ -29,3 +29,7 @@ exploration/*.txt
 # dbt
 target/
 dbt_packages/
+
+# Power BI : données importées et réglages locaux
+**/.pbi/cache.abf
+**/.pbi/localSettings.json

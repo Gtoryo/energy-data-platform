@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "energy_dashboard"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "071b2ae3-72ea-4154-bc1d-ff5db21b56d7"
+  }
+}

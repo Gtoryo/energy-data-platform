@@ -1,0 +1,118 @@
+table fct_consommation
+	lineageTag: 915af9fb-1fa5-41a5-bdd5-03f2f18adbca
+
+	column date_heure
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 8d9f0977-b745-4a13-835c-b01f51c4d7e4
+		summarizeBy: none
+		sourceColumn: date_heure
+
+		annotation SummarizationSetBy = Automatic
+
+	column date
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: aa298f69-2f1a-42b8-a024-976cb07fdb9f
+		summarizeBy: none
+		sourceColumn: date
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column heure
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: ad3f469f-2120-4651-b063-903e980f99b0
+		summarizeBy: none
+		sourceColumn: heure
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column nature
+		dataType: string
+		lineageTag: 7c63fdbe-11e7-4bde-a4c2-d5be34047090
+		summarizeBy: none
+		sourceColumn: nature
+
+		annotation SummarizationSetBy = Automatic
+
+	column duree_h
+		dataType: double
+		lineageTag: bada840b-5f25-46f9-9323-790d38ba4fce
+		summarizeBy: sum
+		sourceColumn: duree_h
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column consommation_mw
+		dataType: double
+		lineageTag: 3df3b3f1-49cb-4b59-8ecc-44de109b3f02
+		summarizeBy: sum
+		sourceColumn: consommation_mw
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column consommation_mwh
+		dataType: double
+		lineageTag: 4be4e317-20ba-43f6-a969-395d02710d0c
+		summarizeBy: sum
+		sourceColumn: consommation_mwh
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column prevision_j1_mw
+		dataType: double
+		lineageTag: 5d3dd5b4-92c8-4a9d-95c8-bd7cd44cbe23
+		summarizeBy: sum
+		sourceColumn: prevision_j1_mw
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column prevision_j_mw
+		dataType: double
+		lineageTag: 689e62d0-c487-4f1f-a77c-8f50ff2893b8
+		summarizeBy: sum
+		sourceColumn: prevision_j_mw
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column taux_co2_g_par_kwh
+		dataType: double
+		lineageTag: 9d89b078-6737-423b-8bbf-0715c2ffeeff
+		summarizeBy: sum
+		sourceColumn: taux_co2_g_par_kwh
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition fct_consommation = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("127.0.0.1:5433", "energy_warehouse"),
+				    analytics_fct_consommation = Source{[Schema="analytics",Item="fct_consommation"]}[Data]
+				in
+				    analytics_fct_consommation
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

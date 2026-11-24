@@ -1,0 +1,58 @@
+table dim_filiere
+	lineageTag: 83199fd8-c0cd-4834-9156-79d366f99ef4
+
+	column filiere
+		dataType: string
+		lineageTag: 29473c47-a943-45cd-9abd-749b36aabce4
+		summarizeBy: none
+		sourceColumn: filiere
+
+		annotation SummarizationSetBy = Automatic
+
+	column libelle
+		dataType: string
+		lineageTag: 7fdf5384-0818-4ec9-9ffb-2c21784ab823
+		summarizeBy: none
+		sourceColumn: libelle
+
+		annotation SummarizationSetBy = Automatic
+
+	column categorie
+		dataType: string
+		lineageTag: 93016add-cde3-4543-a434-8c2ab18ea74e
+		summarizeBy: none
+		sourceColumn: categorie
+
+		annotation SummarizationSetBy = Automatic
+
+	column est_renouvelable
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: a5e9d646-c7b9-44d0-8e34-69efb206980b
+		summarizeBy: none
+		sourceColumn: est_renouvelable
+
+		annotation SummarizationSetBy = Automatic
+
+	column est_bas_carbone
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 458f68f3-d083-4e70-a0a6-d70b9c36416c
+		summarizeBy: none
+		sourceColumn: est_bas_carbone
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_filiere = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("127.0.0.1:5433", "energy_warehouse"),
+				    analytics_dim_filiere = Source{[Schema="analytics",Item="dim_filiere"]}[Data]
+				in
+				    analytics_dim_filiere
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
