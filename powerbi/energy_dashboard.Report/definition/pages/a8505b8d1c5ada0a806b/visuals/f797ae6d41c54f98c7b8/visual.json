@@ -1,0 +1,99 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.15.0/schema.json",
+  "name": "f797ae6d41c54f98c7b8",
+  "position": {
+    "x": 150.29556650246306,
+    "y": 610.49261083743841,
+    "z": 1,
+    "height": 321.871921182266,
+    "width": 665.02463054187194,
+    "tabOrder": 1
+  },
+  "visual": {
+    "visualType": "pivotTable",
+    "query": {
+      "queryState": {
+        "Rows": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_date"
+                    }
+                  },
+                  "Property": "annee"
+                }
+              },
+              "queryRef": "dim_date.annee",
+              "nativeQueryRef": "Somme de annee",
+              "active": true
+            }
+          ]
+        },
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_consommation"
+                    }
+                  },
+                  "Property": "Écart absolu J-1 (MW)"
+                }
+              },
+              "queryRef": "fct_consommation.Écart absolu J-1 (MW)",
+              "nativeQueryRef": "Écart absolu J-1 (MW)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_consommation"
+                    }
+                  },
+                  "Property": "Écart relatif J-1"
+                }
+              },
+              "queryRef": "fct_consommation.Écart relatif J-1",
+              "nativeQueryRef": "Écart relatif J-1"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_consommation"
+                    }
+                  },
+                  "Property": "Prévision J-1 (MW)"
+                }
+              },
+              "queryRef": "fct_consommation.Prévision J-1 (MW)",
+              "nativeQueryRef": "Prévision J-1 (MW)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_consommation"
+                    }
+                  },
+                  "Property": "Intensité carbone (g/kWh)"
+                }
+              },
+              "queryRef": "fct_consommation.Intensité carbone (g/kWh)",
+              "nativeQueryRef": "Intensité carbone (g/kWh)"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

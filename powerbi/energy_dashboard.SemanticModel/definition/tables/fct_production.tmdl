@@ -1,6 +1,44 @@
 table fct_production
 	lineageTag: 8fc3b525-2c5c-4f91-90ae-2e940760d9ff
 
+	measure 'Production (TWh)' =
+			
+			SUM(fct_production[production_mwh]) / 1000000
+		formatString: 0.00
+		lineageTag: 125efd5d-1b53-49ce-aaac-fc8e71275cea
+
+	measure 'Production toutes filières (TWh)' =
+			
+			CALCULATE([Production (TWh)], REMOVEFILTERS(dim_filiere))
+		formatString: 0.00
+		lineageTag: ed1a6469-b6eb-4031-ab1e-13d784485631
+
+	measure 'Part du nucléaire' =
+			
+			DIVIDE(
+			    CALCULATE(
+			        [Production (TWh)],
+			        REMOVEFILTERS(dim_filiere),
+			        dim_filiere[filiere] = "nucleaire"
+			    ),
+			    [Production toutes filières (TWh)]
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 97468bca-751c-4448-8f00-98a4af7cd766
+
+	measure 'Part des renouvelables' =
+			
+			DIVIDE(
+			    CALCULATE(
+			        [Production (TWh)],
+			        REMOVEFILTERS(dim_filiere),
+			        dim_filiere[est_renouvelable] = TRUE()
+			    ),
+			    [Production toutes filières (TWh)]
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 6abb71fd-dc96-4dbb-8814-2d500d5ab50c
+
 	column date_heure
 		dataType: dateTime
 		formatString: General Date
@@ -45,9 +83,12 @@ table fct_production
 
 	column duree_h
 		dataType: double
+		isHidden
 		lineageTag: 1a77987c-b775-470d-8087-315a66509644
 		summarizeBy: sum
 		sourceColumn: duree_h
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 
@@ -66,9 +107,12 @@ table fct_production
 
 	column production_mw
 		dataType: double
+		isHidden
 		lineageTag: d5d2ae0c-aba7-42b6-9aa8-907c5ae48765
 		summarizeBy: sum
 		sourceColumn: production_mw
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 
@@ -76,9 +120,12 @@ table fct_production
 
 	column production_mwh
 		dataType: double
+		isHidden
 		lineageTag: 26c9ca91-4892-40ca-a564-76109cec297f
 		summarizeBy: sum
 		sourceColumn: production_mwh
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 

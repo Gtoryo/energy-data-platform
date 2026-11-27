@@ -1,0 +1,99 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.15.0/schema.json",
+  "name": "d812ce62480f255b64bd",
+  "position": {
+    "x": 879.16256157635462,
+    "y": 540,
+    "z": 2,
+    "height": 424,
+    "width": 986,
+    "tabOrder": 2
+  },
+  "visual": {
+    "visualType": "pivotTable",
+    "query": {
+      "queryState": {
+        "Rows": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_date"
+                    }
+                  },
+                  "Property": "annee"
+                }
+              },
+              "queryRef": "dim_date.annee",
+              "nativeQueryRef": "Somme de annee",
+              "active": true
+            }
+          ]
+        },
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_production"
+                    }
+                  },
+                  "Property": "Part des renouvelables"
+                }
+              },
+              "queryRef": "fct_production.Part des renouvelables",
+              "nativeQueryRef": "Part des renouvelables"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_production"
+                    }
+                  },
+                  "Property": "Part du nucléaire"
+                }
+              },
+              "queryRef": "fct_production.Part du nucléaire",
+              "nativeQueryRef": "Part du nucléaire"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_production"
+                    }
+                  },
+                  "Property": "Production (TWh)"
+                }
+              },
+              "queryRef": "fct_production.Production (TWh)",
+              "nativeQueryRef": "Production (TWh)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_production"
+                    }
+                  },
+                  "Property": "Production toutes filières (TWh)"
+                }
+              },
+              "queryRef": "fct_production.Production toutes filières (TWh)",
+              "nativeQueryRef": "Production toutes filières (TWh)"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

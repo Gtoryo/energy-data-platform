@@ -34,6 +34,13 @@
                 "Value": "true"
               }
             }
+          },
+          "expanded": {
+            "expr": {
+              "Literal": {
+                "Value": "false"
+              }
+            }
           }
         }
       }
@@ -61,5 +68,6 @@
     "useDefaultAggregateDisplayName": true,
     "customMemoryLimit": "1048576",
     "customTimeoutLimit": "225"
-  }
+  },
+  "linguisticSchemaSyncVersion": 2
 }

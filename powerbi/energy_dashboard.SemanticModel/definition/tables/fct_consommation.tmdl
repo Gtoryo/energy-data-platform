@@ -1,6 +1,91 @@
 table fct_consommation
 	lineageTag: 915af9fb-1fa5-41a5-bdd5-03f2f18adbca
 
+	measure 'Énergie consommée (TWh)' =
+			
+			SUM(fct_consommation[consommation_mwh]) / 1000000
+		formatString: 0.00
+		lineageTag: 42c4f2cf-fc76-4f2c-a23e-3fef855850db
+
+	measure 'Durée mesurée (h)' =
+			
+			SUM(fct_consommation[duree_h])
+		formatString: #,0
+		lineageTag: 477232fe-2822-40a9-ab9a-8a133d5b9950
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Puissance moyenne (MW)' =
+			
+			DIVIDE(SUM(fct_consommation[consommation_mwh]), [Durée mesurée (h)])
+		formatString: #,0
+		lineageTag: 6f2f5b1d-3c2f-4db7-aeef-034bc45fa11c
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Puissance maximale (MW)' =
+			
+			MAX(fct_consommation[consommation_mw])
+		formatString: #,0
+		lineageTag: 0feb7046-6c86-418e-9776-69886eb5b320
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Puissance minimale (MW)' =
+			
+			MIN(fct_consommation[consommation_mw])
+		formatString: #,0
+		lineageTag: 3cd2a1ee-4ec7-43e1-902a-271bafda968f
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Intensité carbone (g/kWh)' =
+			
+			DIVIDE(
+			    SUMX(
+			        fct_consommation,
+			        fct_consommation[taux_co2_g_par_kwh] * fct_consommation[duree_h]
+			    ),
+			    [Durée mesurée (h)]
+			)
+		formatString: 0.0
+		lineageTag: 748d0805-5f45-4476-bae8-bda0953e230e
+
+	measure 'Prévision J-1 (MW)' =
+			
+			DIVIDE(
+			    SUMX(
+			        fct_consommation,
+			        fct_consommation[prevision_j1_mw] * fct_consommation[duree_h]
+			    ),
+			    [Durée mesurée (h)]
+			)
+		formatString: #,0
+		lineageTag: 96c66721-eafb-4cfc-b400-d18c30860bc1
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Écart absolu J-1 (MW)' =
+			
+			DIVIDE(
+			    SUMX(
+			        fct_consommation,
+			        ABS(fct_consommation[prevision_j1_mw] - fct_consommation[consommation_mw])
+			            * fct_consommation[duree_h]
+			    ),
+			    [Durée mesurée (h)]
+			)
+		formatString: #,0
+		lineageTag: 49c8ce91-fecc-495a-94c8-76371def0490
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Écart relatif J-1' =
+			
+			DIVIDE([Écart absolu J-1 (MW)], [Puissance moyenne (MW)])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 666c4e98-02bb-43f5-802d-1e2762b76b88
+
 	column date_heure
 		dataType: dateTime
 		formatString: General Date
@@ -45,9 +130,12 @@ table fct_consommation
 
 	column duree_h
 		dataType: double
+		isHidden
 		lineageTag: bada840b-5f25-46f9-9323-790d38ba4fce
 		summarizeBy: sum
 		sourceColumn: duree_h
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 
@@ -55,9 +143,12 @@ table fct_consommation
 
 	column consommation_mw
 		dataType: double
+		isHidden
 		lineageTag: 3df3b3f1-49cb-4b59-8ecc-44de109b3f02
 		summarizeBy: sum
 		sourceColumn: consommation_mw
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 
@@ -65,9 +156,12 @@ table fct_consommation
 
 	column consommation_mwh
 		dataType: double
+		isHidden
 		lineageTag: 4be4e317-20ba-43f6-a969-395d02710d0c
 		summarizeBy: sum
 		sourceColumn: consommation_mwh
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 
@@ -75,9 +169,12 @@ table fct_consommation
 
 	column prevision_j1_mw
 		dataType: double
+		isHidden
 		lineageTag: 5d3dd5b4-92c8-4a9d-95c8-bd7cd44cbe23
 		summarizeBy: sum
 		sourceColumn: prevision_j1_mw
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 
@@ -85,9 +182,12 @@ table fct_consommation
 
 	column prevision_j_mw
 		dataType: double
+		isHidden
 		lineageTag: 689e62d0-c487-4f1f-a77c-8f50ff2893b8
 		summarizeBy: sum
 		sourceColumn: prevision_j_mw
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 
@@ -95,9 +195,12 @@ table fct_consommation
 
 	column taux_co2_g_par_kwh
 		dataType: double
+		isHidden
 		lineageTag: 9d89b078-6737-423b-8bbf-0715c2ffeeff
 		summarizeBy: sum
 		sourceColumn: taux_co2_g_par_kwh
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 

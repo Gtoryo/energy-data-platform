@@ -1,0 +1,113 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.15.0/schema.json",
+  "name": "8a2a962ef90f73f5c629",
+  "position": {
+    "x": 166.25615763546799,
+    "y": 46.551724137931032,
+    "z": 0,
+    "height": 424.28571428571428,
+    "width": 985.56650246305412,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "pivotTable",
+    "query": {
+      "queryState": {
+        "Rows": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_date"
+                    }
+                  },
+                  "Property": "annee"
+                }
+              },
+              "queryRef": "dim_date.annee",
+              "nativeQueryRef": "Somme de annee",
+              "active": true
+            }
+          ]
+        },
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_consommation"
+                    }
+                  },
+                  "Property": "Durée mesurée (h)"
+                }
+              },
+              "queryRef": "fct_consommation.Durée mesurée (h)",
+              "nativeQueryRef": "Durée mesurée (h)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_consommation"
+                    }
+                  },
+                  "Property": "Énergie consommée (TWh)"
+                }
+              },
+              "queryRef": "fct_consommation.Énergie consommée (TWh)",
+              "nativeQueryRef": "Énergie consommée (TWh)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_consommation"
+                    }
+                  },
+                  "Property": "Puissance maximale (MW)"
+                }
+              },
+              "queryRef": "fct_consommation.Puissance maximale (MW)",
+              "nativeQueryRef": "Puissance maximale (MW)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_consommation"
+                    }
+                  },
+                  "Property": "Puissance minimale (MW)"
+                }
+              },
+              "queryRef": "fct_consommation.Puissance minimale (MW)",
+              "nativeQueryRef": "Puissance minimale (MW)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_consommation"
+                    }
+                  },
+                  "Property": "Puissance moyenne (MW)"
+                }
+              },
+              "queryRef": "fct_consommation.Puissance moyenne (MW)",
+              "nativeQueryRef": "Puissance moyenne (MW)"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
